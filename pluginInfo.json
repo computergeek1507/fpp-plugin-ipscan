@@ -1,0 +1,26 @@
+{
+	"repoName": "fpp-plugin-ipscan",
+	"name": "IP Scanner",
+	"author": "Scott Hanson (computergeek1507)",
+	"description": "Scans a range of IP addresses and lists what answers: ping time, hostname, MAC/vendor, open ports, and the device type, name and version of FPP, WLED, Falcon, ESPixelStick, Tasmota and other controllers. Results can be downloaded as CSV. Also includes an Angry IP Scanner style command line tool.",
+	"homeURL": "https://github.com/computergeek1507/fpp-plugin-ipscan",
+	"srcURL": "https://github.com/computergeek1507/fpp-plugin-ipscan.git",
+	"bugURL": "https://github.com/computergeek1507/fpp-plugin-ipscan/issues",
+	"allowUpdates": 1,
+	"versions": [
+		{
+			"minFPPVersion": "9.0",
+			"maxFPPVersion": "9.99",
+			"branch": "main",
+			"sha": "",
+			"allowUpdates": 1
+		},
+		{
+			"minFPPVersion": "10.0",
+			"maxFPPVersion": "10.99",
+			"branch": "main",
+			"sha": "",
+			"allowUpdates": 1
+		}
+	]
+}
