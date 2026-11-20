@@ -32,8 +32,9 @@
     <label>Timeout (s)
       <input id="ipscanTimeout" type="number" step="0.1" min="0.2" max="5" value="1" class="form-control form-control-sm" style="min-width:5rem">
     </label>
-    <label class="form-check-label" style="flex-direction:row;align-items:center;gap:.4rem">
-      <input id="ipscanDns" type="checkbox" class="form-check-input" checked> Hostnames
+    <label class="form-check-label" style="flex-direction:row;align-items:center;gap:.4rem"
+           title="Look up each device's name with reverse DNS. Untick for a slightly faster scan without the Hostname column.">
+      <input id="ipscanDns" type="checkbox" class="form-check-input" checked> Look up hostnames
     </label>
     <button id="ipscanGo" class="buttons btn-success">Scan</button>
     <button id="ipscanStop" class="buttons btn-danger" style="display:none">Stop</button>
