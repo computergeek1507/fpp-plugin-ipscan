@@ -174,9 +174,10 @@
     });
   });
 
-  $.get(API + 'defaults').done(function (d) {
+  function fillNetworks(nets) {
     var sel = $('ipscanNet');
-    (d.networks || []).forEach(function (n) {
+    sel.innerHTML = '';
+    nets.forEach(function (n) {
       var o = document.createElement('option');
       o.textContent = n.interface + ' (' + n.address + ')';
       o.dataset.start = n.start; o.dataset.end = n.end;
@@ -185,11 +186,17 @@
     var custom = document.createElement('option');
     custom.textContent = 'Custom';
     sel.appendChild(custom);
-    if (d.networks && d.networks.length && !$('ipscanStart').value) {
-      $('ipscanStart').value = d.networks[0].start;
-      $('ipscanEnd').value = d.networks[0].end;
+    if (nets.length && !$('ipscanStart').value) {
+      $('ipscanStart').value = nets[0].start;
+      $('ipscanEnd').value = nets[0].end;
     }
-  });
+  }
+  fillNetworks([]);
+  $.get(API + 'defaults')
+    .done(function (d) { fillNetworks((d && d.networks) || []); })
+    .fail(function (x) {
+      console.error('ipscan: could not load networks', x.status, x.responseText);
+    });
   poll();
 })();
 </script>

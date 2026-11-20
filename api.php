@@ -58,31 +58,59 @@ function ipscanError($msg) {
 // suggested scan range. Uses /24 at most so a /16 doesn't suggest 65k hosts.
 function ipscanApiDefaults() {
     $nets = array();
+    foreach (ipscanLocalAddresses() as $a) {
+        $ip = ip2long($a['address']);
+        if ($ip === false || $a['bits'] < 1 || $a['bits'] > 32) continue;
+        if (($ip >> 24) == 127 || ($ip & 0xFFFF0000) == ip2long('169.254.0.0')) continue;
+        $bits = max($a['bits'], 24);
+        $mask = (0xFFFFFFFF << (32 - $bits)) & 0xFFFFFFFF;
+        $net = $ip & $mask;
+        $bcast = $net | (~$mask & 0xFFFFFFFF);
+        if ($bits >= 31) {
+            $start = $net;
+            $end = $bcast;
+        } else {
+            $start = $net + 1;
+            $end = $bcast - 1;
+        }
+        $nets[] = array(
+            'interface' => $a['interface'],
+            'address' => $a['address'],
+            'start' => long2ip($start),
+            'end' => long2ip($end),
+        );
+    }
+    return json(array('networks' => $nets));
+}
+
+// IPv4 addresses with interface name and prefix length. Uses getifaddrs()
+// via net_get_interfaces(), and falls back to `ip -o -4 addr` if that is
+// missing or returns nothing. Family 2 is AF_INET; the AF_INET constant
+// itself needs PHP's sockets extension, which not every FPP image has.
+function ipscanLocalAddresses() {
+    $out = array();
     if (function_exists('net_get_interfaces')) {
-        foreach (net_get_interfaces() as $name => $iface) {
-            if (empty($iface['unicast'])) continue;
-            foreach ($iface['unicast'] as $u) {
-                if (!isset($u['family']) || $u['family'] != AF_INET || empty($u['address']) || empty($u['netmask'])) continue;
-                $ip = ip2long($u['address']);
+        foreach (@net_get_interfaces() ?: array() as $name => $iface) {
+            foreach (isset($iface['unicast']) ? $iface['unicast'] : array() as $u) {
+                if ((isset($u['family']) ? $u['family'] : 0) != 2 || empty($u['address']) || empty($u['netmask'])) continue;
                 $mask = ip2long($u['netmask']);
-                if ($ip === false || $mask === false) continue;
-                if (($ip >> 24) == 127 || ($ip & 0xFFFF0000) == ip2long('169.254.0.0')) continue;
-                $bits = 32 - (int)log((~$mask & 0xFFFFFFFF) + 1, 2);
-                if ($bits < 24) {
-                    $mask = ip2long('255.255.255.0');
-                }
-                $net = $ip & $mask;
-                $bcast = $net | (~$mask & 0xFFFFFFFF);
-                $nets[] = array(
-                    'interface' => $name,
-                    'address' => $u['address'],
-                    'start' => long2ip($net + 1),
-                    'end' => long2ip($bcast - 1),
-                );
+                if ($mask === false) continue;
+                $bits = 0;
+                for ($i = 31; $i >= 0 && ($mask & (1 << $i)); $i--) $bits++;
+                $out[] = array('interface' => $name, 'address' => $u['address'], 'bits' => $bits);
             }
         }
     }
-    return json(array('networks' => $nets));
+    if (empty($out)) {
+        $lines = array();
+        @exec('ip -o -4 addr show 2>/dev/null', $lines);
+        foreach ($lines as $line) {
+            if (preg_match('/^\d+:\s+(\S+)\s+inet\s+([\d.]+)\/(\d+)/', $line, $m)) {
+                $out[] = array('interface' => $m[1], 'address' => $m[2], 'bits' => intval($m[3]));
+            }
+        }
+    }
+    return $out;
 }
 
 function ipscanApiScan() {
