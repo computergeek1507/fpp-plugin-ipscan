@@ -74,7 +74,7 @@
                   'HinksPix', 'SanDevices', 'AlphaPix', 'Experience Lights', 'PixLite'];
   var hosts = [], sortKey = 'ip', sortDir = 1, timer = null;
 
-  function $(id) { return document.getElementById(id); }
+  function byId(id) { return document.getElementById(id); }
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c];
@@ -91,8 +91,8 @@
   }
 
   function render() {
-    var f = $('ipscanFilter').value.toLowerCase();
-    var only = $('ipscanLightingOnly').checked;
+    var f = byId('ipscanFilter').value.toLowerCase();
+    var only = byId('ipscanLightingOnly').checked;
     var rows = hosts.filter(function (h) {
       if (only && LIGHTING.indexOf(h.device_type) < 0) return false;
       if (!f) return true;
@@ -106,7 +106,7 @@
       else { x = String(x || '').toLowerCase(); y = String(y || '').toLowerCase(); }
       return (x < y ? -1 : x > y ? 1 : 0) * sortDir;
     });
-    $('ipscanRows').innerHTML = rows.map(function (h) {
+    byId('ipscanRows').innerHTML = rows.map(function (h) {
       var url = link(h);
       var ip = url ? '<a href="' + esc(url) + '" target="_blank">' + esc(h.ip) + '</a>' : esc(h.ip);
       var type = h.device_type ? '<span class="badge ' +
@@ -122,16 +122,16 @@
   function show(st) {
     hosts = st.hosts || [];
     var pct = st.total ? Math.round(100 * st.done / st.total) : 0;
-    $('ipscanBar').style.width = (st.state === 'idle' ? 0 : pct) + '%';
+    byId('ipscanBar').style.width = (st.state === 'idle' ? 0 : pct) + '%';
     var running = st.state === 'running';
-    $('ipscanGo').style.display = running ? 'none' : '';
-    $('ipscanStop').style.display = running ? '' : 'none';
+    byId('ipscanGo').style.display = running ? 'none' : '';
+    byId('ipscanStop').style.display = running ? '' : 'none';
     if (st.state === 'idle') {
-      $('ipscanSummary').textContent = 'No scan yet.';
+      byId('ipscanSummary').textContent = 'No scan yet.';
     } else {
       var when = st.finished ? new Date(st.finished * 1000).toLocaleString() : '';
       var secs = st.started ? (((st.finished || Date.now() / 1000) - st.started)).toFixed(1) : '';
-      $('ipscanSummary').textContent = (running ? 'Scanning ' : (st.state === 'stopped' ? 'Stopped: ' : 'Finished: ')) +
+      byId('ipscanSummary').textContent = (running ? 'Scanning ' : (st.state === 'stopped' ? 'Stopped: ' : 'Finished: ')) +
         (st.range || '') + ' — ' + st.done + '/' + st.total + ' scanned, ' + st.alive + ' alive' +
         (secs ? ' in ' + secs + 's' : '') + (when ? ' (' + when + ')' : '');
     }
@@ -142,13 +142,13 @@
 
   function poll() { $.get(API + 'status').done(show); }
 
-  $('ipscanGo').addEventListener('click', function () {
+  byId('ipscanGo').addEventListener('click', function () {
     var body = {
-      start: $('ipscanStart').value.trim(),
-      end: $('ipscanEnd').value.trim(),
-      ports: $('ipscanPorts').value.trim(),
-      timeout: parseFloat($('ipscanTimeout').value) || 1,
-      dns: $('ipscanDns').checked
+      start: byId('ipscanStart').value.trim(),
+      end: byId('ipscanEnd').value.trim(),
+      ports: byId('ipscanPorts').value.trim(),
+      timeout: parseFloat(byId('ipscanTimeout').value) || 1,
+      dns: byId('ipscanDns').checked
     };
     $.ajax({ url: API + 'scan', type: 'POST', contentType: 'application/json', data: JSON.stringify(body) })
       .done(function () { poll(); })
@@ -157,12 +157,12 @@
         $.jGrowl ? $.jGrowl('Scan failed: ' + msg, { themeState: 'danger' }) : alert('Scan failed: ' + msg);
       });
   });
-  $('ipscanStop').addEventListener('click', function () { $.post(API + 'stop').done(poll); });
-  $('ipscanFilter').addEventListener('input', render);
-  $('ipscanLightingOnly').addEventListener('change', render);
-  $('ipscanNet').addEventListener('change', function () {
+  byId('ipscanStop').addEventListener('click', function () { $.post(API + 'stop').done(poll); });
+  byId('ipscanFilter').addEventListener('input', render);
+  byId('ipscanLightingOnly').addEventListener('change', render);
+  byId('ipscanNet').addEventListener('change', function () {
     var o = this.options[this.selectedIndex];
-    if (o && o.dataset.start) { $('ipscanStart').value = o.dataset.start; $('ipscanEnd').value = o.dataset.end; }
+    if (o && o.dataset.start) { byId('ipscanStart').value = o.dataset.start; byId('ipscanEnd').value = o.dataset.end; }
   });
   document.querySelectorAll('#ipscan th[data-sort]').forEach(function (th) {
     th.addEventListener('click', function () {
@@ -176,7 +176,7 @@
   });
 
   function fillNetworks(nets) {
-    var sel = $('ipscanNet');
+    var sel = byId('ipscanNet');
     sel.innerHTML = '';
     nets.forEach(function (n) {
       var o = document.createElement('option');
@@ -187,9 +187,9 @@
     var custom = document.createElement('option');
     custom.textContent = 'Custom';
     sel.appendChild(custom);
-    if (nets.length && !$('ipscanStart').value) {
-      $('ipscanStart').value = nets[0].start;
-      $('ipscanEnd').value = nets[0].end;
+    if (nets.length && !byId('ipscanStart').value) {
+      byId('ipscanStart').value = nets[0].start;
+      byId('ipscanEnd').value = nets[0].end;
     }
   }
   fillNetworks([]);
